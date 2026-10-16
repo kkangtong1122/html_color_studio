@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Color Studio v3.7.1 · PC·모바일 UI 개선</title>
+<title>Color Studio v3.7.2 · HTML 실시간 코드 편집</title>
 <style>
 :root{--mint:#78b394;--deep:#386b54;--dark:#2a4437;--line:#dce8e0;--muted:#6b8173;--paper:#f7f9f6;--white:#fff;font-family:system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--dark)}
 *{box-sizing:border-box}html,body{margin:0;height:100%;min-height:0}body{background:var(--paper)}
@@ -263,12 +263,44 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media (prefers-reduced-motion:reduce){
  .btn{transition:none}
 }
+/* v3.7.2: original editing tabs remain untouched; inline live-code split is opt-in. */
+#liveCodePane[hidden]{display:none!important}
+#liveCodePane{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;background:#fff}
+#workspace[data-code-mode="true"] #selectionBar,
+#workspace[data-code-mode="true"] .tabs,
+#workspace[data-code-mode="true"] .panel-scroll{display:none!important}
+.live-code-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:11px 13px;border-bottom:1px solid var(--line);background:#fbfdfb;flex:none}
+.live-code-head strong{font-size:13px;color:#426f57}.live-code-actions{display:flex;gap:6px;align-items:center}
+#liveCodeValue{flex:1;min-height:0;width:100%;resize:none;border:0;outline:0;padding:15px 17px;background:#f8faf8;color:#35493d;font:13px/1.65 Consolas,'Courier New',monospace;tab-size:2;white-space:pre;overflow:auto;overflow-wrap:normal}
+#liveCodeValue:focus{box-shadow:inset 0 0 0 2px #9bcdb0}
+.live-code-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 13px;border-top:1px solid var(--line);font-size:11px;line-height:1.5;color:#7b8d81;background:white}
+#liveCodeStatus{font-weight:750;color:#498364}.live-code-foot span:last-child{font-size:10px}
+#liveCodeToggle[aria-pressed="true"]{background:#e1f5e7;border-color:#89be9c;color:#246c49}
+#workspace[data-code-mode="true"] #previewHeader{background:#f4fbf6}
+#workspace[data-code-mode="true"] #previewHeader span, #workspace[data-code-mode="true"] #directMoveMode{display:none!important}
+@media(max-width:1020px){
+  #compactNav:not([hidden]){grid-template-columns:repeat(4,minmax(0,1fr))}
+  #compactNav button{font-size:12px;padding:8px 2px}
+  #workspace[data-code-mode="true"][data-compact-view="code"] #left{display:flex!important;flex:0 0 49%!important;height:49%!important;min-height:100px!important}
+  #workspace[data-code-mode="true"][data-compact-view="code"] #right{display:flex!important;flex:1 1 auto!important;min-height:110px!important}
+  #workspace[data-code-mode="true"][data-compact-view="code"] #previewHeader{min-height:38px;padding:5px 9px}
+  #workspace[data-code-mode="true"][data-compact-view="code"] #previewHeader .row{display:none!important}
+  #workspace[data-code-mode="true"][data-compact-view="code"] #previewToEdit{display:none!important}
+  #workspace[data-code-mode="true"][data-compact-view="code"] #previewOuter{padding:6px}
+  #liveCodeValue{font-size:12px;padding:10px}
+  .live-code-head{padding:7px 10px;gap:5px}
+  .live-code-head strong{font-size:12px}
+  .live-code-actions .btn{min-height:33px;padding:5px 8px;font-size:11px}
+  .live-code-foot{padding:5px 10px;font-size:10px}
+  .live-code-foot span:last-child{display:none}
+}
+@media(max-width:420px){.live-code-actions .btn{font-size:10px}.live-code-head strong{font-size:11px}}
 </style>
 </head>
 <body>
 <div id="app">
-<header><div class="logo">🌷 Color <b>Studio</b></div><span class="sub">PC·모바일 UI 테스트 · v3.7.1</span><button class="btn btn-quiet" type="button" id="mobileToolsToggle" aria-controls="toolbar" aria-expanded="false" aria-label="더 많은 작업 도구 보기" hidden>☰ 도구</button><div class="actions" id="toolbar" hidden>
-<button class="btn btn-quiet" id="loadAnother">↻ 다른 HTML</button><button class="btn btn-quiet" id="undo" title="되돌리기 (Ctrl+Z)">↶ 되돌리기</button><button class="btn btn-quiet" id="redo">↷ 다시</button><button class="btn" id="openCode">〈/〉 HTML 코드 보기</button><button class="btn" id="copyHtml" title="현재 HTML 결과를 클립보드에 복사 (코드창을 열지 않아도 돼요)">⧉ HTML 복사</button><button class="btn btn-primary" id="download">↓ HTML 저장</button><span id="autosaveStatus" role="status" title="현재 브라우저에 자동으로 임시 저장합니다.">임시 저장 준비</span></div></header>
+<header><div class="logo">🌷 Color <b>Studio</b></div><span class="sub">코드 + 미리보기 · v3.7.2</span><button class="btn btn-quiet" type="button" id="mobileToolsToggle" aria-controls="toolbar" aria-expanded="false" aria-label="더 많은 작업 도구 보기" hidden>☰ 도구</button><div class="actions" id="toolbar" hidden>
+<button class="btn btn-quiet" id="loadAnother">↻ 다른 HTML</button><button class="btn btn-quiet" id="undo" title="되돌리기 (Ctrl+Z)">↶ 되돌리기</button><button class="btn btn-quiet" id="redo">↷ 다시</button><button class="btn" id="liveCodeToggle" type="button" aria-pressed="false" title="코드를 수정하면 오른쪽 미리보기에 바로 반영됩니다">〈/〉 코드 + 미리보기</button><button class="btn" id="openCode">HTML 코드 팝업</button><button class="btn" id="copyHtml" title="현재 HTML 결과를 클립보드에 복사 (코드창을 열지 않아도 돼요)">⧉ HTML 복사</button><button class="btn btn-primary" id="download">↓ HTML 저장</button><span id="autosaveStatus" role="status" title="현재 브라우저에 자동으로 임시 저장합니다.">임시 저장 준비</span></div></header>
 <section id="start"><div id="startCard"><h2>어떤 HTML을 꾸며볼까요? 🌼</h2><p>HTML을 붙여넣거나 파일을 가져온 다음 바로 편집을 시작하세요.<br>편집 중에는 코드를 열 필요가 없어요.</p><div id="recoveryBox" hidden><div><strong>↶ 이전 작업이 남아 있어요</strong><small id="recoveryTime">이 브라우저에 저장한 작업</small></div><div class="recovery-actions"><button class="btn btn-primary" id="resumeDraft" type="button">이전 작업 이어하기</button><button class="btn btn-quiet" id="discardDraft" type="button">임시 저장 삭제</button></div></div><textarea id="startInput" spellcheck="false" placeholder="<!DOCTYPE html>\n<html>\n  ...\n</html>"></textarea><div class="start-buttons"><button class="btn btn-primary" id="startBtn">✦ 편집 시작하기</button><button class="btn" id="fileBtn">📂 HTML 파일 불러오기</button><button class="btn" id="exampleBtn">🌱 예시로 시험하기</button></div><input type="file" id="htmlFile" accept=".html,.htm,.txt,text/html,text/plain" hidden><span class="help">원본 스타일과 클래스를 유지해서 불러와요. 미리보기에서는 스크립트를 실행하지 않으며, 저장한 HTML에는 원래 코드가 포함될 수 있어요.</span></div></section>
 <main id="workspace" data-compact-view="edit">
 <aside id="left"><div id="selectionBar"><div class="select-info">
@@ -355,9 +387,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <p class="muted">복제·이동·삭제는 선택한 요소 하나에만 적용됩니다. 다른 DIV 가운데로 끌면 안에 들어가고, 요소 위·아래로 끌면 순서가 바뀌어요. 복잡한 탭 내부 구조는 보호해요.</p>
 </details>
 </section>
-</div></aside><div id="split" role="separator" aria-label="좌우 패널 폭 조절" aria-orientation="vertical" tabindex="0"></div>
+</div>
+<section id="liveCodePane" aria-label="HTML 실시간 코드 편집" hidden>
+  <div class="live-code-head"><strong>〈/〉 HTML 코드 편집</strong><div class="live-code-actions"><button type="button" class="btn btn-small" id="liveFormat" title="코드를 줄바꿈·들여쓰기합니다">코드 정리</button><button type="button" class="btn btn-small" id="liveExit">✕ 편집 도구로</button></div></div>
+  <textarea id="liveCodeValue" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="실시간 HTML 코드 편집기"></textarea>
+  <div class="live-code-foot"><span id="liveCodeStatus" role="status" aria-live="polite">수정하면 미리보기에 자동 반영돼요.</span><span>약 0.5초 후 반영 · Ctrl+Shift+F 정리</span></div>
+</section>
+</aside><div id="split" role="separator" aria-label="좌우 패널 폭 조절" aria-orientation="vertical" tabindex="0"></div>
 <section id="right"><div id="previewHeader"><strong>👁 실시간 미리보기</strong><button type="button" class="btn btn-small" id="previewToEdit" aria-label="편집 도구로 이동">✏️ 편집 도구로</button><div class="row"><span>클릭: 선택 · Alt+클릭: 기능 실행 없이 선택 · 더블클릭: 글 수정</span><button class="btn btn-small btn-quiet" id="directMoveMode" type="button" aria-pressed="false" title="켜면 글자 위에서도 이동할 수 있어요. 접이식 상자의 제목(summary)을 끌 때도 사용하세요.">⠿ 이동 모드: 꺼짐</button><button class="btn btn-small btn-quiet" id="previewWidth">휴대폰 너비로 보기</button></div></div><div id="previewOuter"><iframe id="previewFrame" title="HTML 미리보기 (더블클릭 직접 수정 · 우클릭 빠른 메뉴)" sandbox="allow-same-origin" referrerpolicy="no-referrer"></iframe></div></section></main>
-<nav id="compactNav" aria-label="작은 화면 작업 영역" hidden><button type="button" class="compact-nav-choice active" id="compactEdit" aria-pressed="true">✏️ 편집</button><button type="button" class="compact-nav-choice" id="compactPreview" aria-pressed="false">👁️ 미리보기</button><button type="button" class="compact-nav-save" id="compactSave">↓ 저장</button></nav>
+<nav id="compactNav" aria-label="작은 화면 작업 영역" hidden><button type="button" class="compact-nav-choice active" id="compactEdit" aria-pressed="true">✏️ 편집</button><button type="button" class="compact-nav-choice" id="compactPreview" aria-pressed="false">👁️ 미리보기</button><button type="button" class="compact-nav-choice" id="compactCode" aria-pressed="false">〈/〉 코드</button><button type="button" class="compact-nav-save" id="compactSave">↓ 저장</button></nav>
 </div>
 <div id="codeOverlay" role="dialog" aria-modal="true" aria-label="HTML 코드 보기"><div id="codeModal"><div class="modalbar"><h2>〈/〉 HTML 코드 보기 · 수정</h2><div><button class="btn" id="formatCode" type="button" title="태그 구조에 따라 줄바꿈과 들여쓰기를 정리합니다 (Ctrl+Shift+F)">↳ 코드 정리</button><button class="btn" id="copyCode">코드 복사</button><button class="btn btn-quiet" id="closeCode">닫기 ✕</button></div></div><textarea id="codeValue" spellcheck="false" aria-label="현재 HTML 코드"></textarea><div class="modalfoot"><span>코드를 열면 자동 개행·들여쓰기를 적용해 보여줘요. 미리보기 원본은 수정하지 않아요.</span><button class="btn btn-primary" id="applyCode">코드 변경 적용</button></div></div></div>
 <div id="quickMenu" role="menu" aria-label="선택한 요소 빠른 메뉴" hidden>
@@ -383,6 +421,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 (()=>{'use strict';
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const frame=$('#previewFrame'), docOf=()=>frame.contentDocument, editorTag='data-color-studio-ui';
+let liveCodeMode=false, liveCodeDirty=false, liveCodeUndoSaved=false, liveCodeTimer=0, liveCodeLastPreview='', liveCodeBaseline='';
 let sel=null, mode='color', className='', candidates=[], currentTextTarget=null, past=[], future=[], originalDoctype='<!DOCTYPE html>', msgTimer, codeOpenValue='', pendingDelete=null, inlineEdit=null, dropMarker=null, dragMove=null, pendingDirectDrag=null, directMoveMode=false, suppressPreviewClick=false;const textDrafts=new Map();
 const editableTags='div,p,section,article,blockquote,li,span,h1,h2,h3,h4,h5,h6,pre';
 // class 유무와 관계없이 배치를 바꿀 수 있는 요소들. details는 내부 구조를 보존해 통째로만 이동.
@@ -420,6 +459,7 @@ function showRecovery(){
   if(item)$('#recoveryTime').textContent='마지막 저장 '+new Date(item.savedAt).toLocaleString('ko-KR')+' · '+item.html.length.toLocaleString('ko-KR')+'자';
 }
 function autosaveSnapshot(){
+  if(liveCodeMode&&liveCodeDirty)return $('#liveCodeValue').value;
   const html=serialize();
   const target=currentTextTarget;
   if(!target||!target.isConnected||!textDrafts.has(target)||[...target.children].some(ch=>ch.tagName!=='BR'))return html;
@@ -492,7 +532,7 @@ function cleanGreetingLayoutSpaces(root){
   }
   return count;
 }
-function renderPreview(source){hideQuickMenu();inlineEdit=null;dragMove=null;pendingDirectDrag=null;dropMarker=null;closeDeleteConfirm();sel=null;currentTextTarget=null;candidates=[];textDrafts.clear();const parsed=new DOMParser().parseFromString(source,'text/html');cleanGreetingLayoutSpaces(parsed);originalDoctype=doctypeOf(parsed);parsed.head.insertAdjacentHTML('afterbegin',docCsp);parsed.head.insertAdjacentHTML('beforeend',uiStyle);frame.onload=()=>{const d=currentDoc();if(!d)return;d.addEventListener('input',scheduleAutosave,true);d.addEventListener('pointerup',scheduleAutosave,true);d.addEventListener('pointerdown',onDirectPointerDown,true);d.addEventListener('pointermove',onDirectPointerMove,true);d.addEventListener('pointerup',onDirectPointerUp,true);d.addEventListener('pointercancel',onDirectPointerCancel,true);d.addEventListener('lostpointercapture',onDirectPointerCancel,true);d.addEventListener('click',onPreviewClick,true);d.addEventListener('dblclick',onPreviewDoubleClick,true);d.addEventListener('contextmenu',onPreviewContextMenu,true);d.addEventListener('scroll',hideQuickMenu,true);d.addEventListener('keydown',handleKeyboardShortcut,true);d.addEventListener('submit',e=>e.preventDefault(),true);installMoveUi(d);const first=d.querySelector('body div,body p,body h1,body h2,body h3,body section');if(first)selectEl(first);else updateControls();renderTree();updateClassOptions();if(bulkColorMode)renderBulkColors();scheduleAutosave();};frame.srcdoc=doctypeOf(parsed)+'\n'+parsed.documentElement.outerHTML}
+function renderPreview(source,retainScroll=false){const previousScroll=retainScroll?(currentDoc()?.scrollingElement?.scrollTop||0):null;hideQuickMenu();inlineEdit=null;dragMove=null;pendingDirectDrag=null;dropMarker=null;closeDeleteConfirm();sel=null;currentTextTarget=null;candidates=[];textDrafts.clear();const parsed=new DOMParser().parseFromString(source,'text/html');cleanGreetingLayoutSpaces(parsed);originalDoctype=doctypeOf(parsed);parsed.head.insertAdjacentHTML('afterbegin',docCsp);parsed.head.insertAdjacentHTML('beforeend',uiStyle);frame.onload=()=>{const d=currentDoc();if(!d)return;d.addEventListener('input',scheduleAutosave,true);d.addEventListener('pointerup',scheduleAutosave,true);d.addEventListener('pointerdown',onDirectPointerDown,true);d.addEventListener('pointermove',onDirectPointerMove,true);d.addEventListener('pointerup',onDirectPointerUp,true);d.addEventListener('pointercancel',onDirectPointerCancel,true);d.addEventListener('lostpointercapture',onDirectPointerCancel,true);d.addEventListener('click',onPreviewClick,true);d.addEventListener('dblclick',onPreviewDoubleClick,true);d.addEventListener('contextmenu',onPreviewContextMenu,true);d.addEventListener('scroll',hideQuickMenu,true);d.addEventListener('keydown',handleKeyboardShortcut,true);d.addEventListener('submit',e=>e.preventDefault(),true);installMoveUi(d);if(previousScroll!==null&&d.scrollingElement)d.scrollingElement.scrollTop=previousScroll;const first=d.querySelector('body div,body p,body h1,body h2,body h3,body section');if(first)selectEl(first);else updateControls();renderTree();updateClassOptions();if(bulkColorMode)renderBulkColors();scheduleAutosave();};frame.srcdoc=doctypeOf(parsed)+'\n'+parsed.documentElement.outerHTML}
 function importHtml(source,isUndo=false){if(!source.trim()){toast('HTML을 입력해주세요.');return false}if(!/<[a-z][\s\S]*?>/i.test(source)){toast('HTML 태그가 있는 코드를 붙여넣어주세요.');return false}if(!isUndo){past=[];future=[];updateUndoUI()}$('#start').style.display='none';$('#workspace').style.display='flex';$('#toolbar').hidden=false;$('#mobileToolsToggle').hidden=false;$('#compactNav').hidden=false;renderPreview(source);refreshCompactLayout();return true}
 // v2.11: 선택은 클릭, 글 편집은 더블클릭, 이동은 요소 여백 드래그.
 // 전체 이동 모드를 켰을 때만 글자 위에서도 드래그가 가능하다. 형제 요소 사이만 허용.
@@ -622,6 +662,7 @@ function pointerOnText(d,root,x,y){
   return false;
 }
 function onDirectPointerDown(e){
+  if(liveCodeMode)return;
   if(e.button!==0||e.pointerType!=='mouse'||dragMove||inlineEdit||pendingDirectDrag||!e.isPrimary)return;
   if(e.target?.closest?.('['+editorTag+'],a,button,input,textarea,select,option,label,[contenteditable],[role="textbox"],[draggable="true"]'))return;
   // summary도 이동 모드 OFF에서 빈 여백으로 끌 수 있게 한다.
@@ -663,6 +704,7 @@ function onDirectPointerCancel(e){
 // 원본 UI의 클릭 동작을 지키면서 현재 선택 요소를 표시한다.
 // 특히 <label for> 클릭을 막으면 CSS 라디오 탭이 작동하지 않는다.
 function onPreviewClick(e){
+  if(liveCodeMode)return; // live code: allow native links/tabs/details; no visual editing
   if(suppressPreviewClick){suppressPreviewClick=false;e.preventDefault();e.stopPropagation();return}
   hideQuickMenu();const d=currentDoc();if(!d||!e.target?.closest)return;
   if(e.target.closest('['+editorTag+']'))return;
@@ -807,6 +849,7 @@ function finishInlineEdit(commit=true){
   return commit&&value!==oldValue;
 }
 function onPreviewDoubleClick(e){
+  if(liveCodeMode)return;
   const d=currentDoc();const target=e.target?.closest?.(editableTags+',summary,label,button,a');
   if(!target||!d?.body.contains(target)||inlineEdit?.target===target||inlineEdit?.owner===target)return;
   e.preventDefault();e.stopPropagation();
@@ -814,6 +857,7 @@ function onPreviewDoubleClick(e){
 }
 function hideQuickMenu(){$('#quickMenu').hidden=true}
 function onPreviewContextMenu(e){
+  if(liveCodeMode)return;
   if(e.target?.closest?.('[contenteditable]'))return; // 직접 수정 중에는 복사·붙여넣기 메뉴 유지
   const d=currentDoc(),target=e.target?.closest?.(selectableTags);
   if(!target||!d?.body.contains(target)){hideQuickMenu();return}
@@ -1352,6 +1396,7 @@ function deleteElement(){
   actuallyDeleteElement(root);
 }
 function handleDeleteShortcut(e){
+  if(liveCodeMode)return;
   if(!['Delete','Del'].includes(e.key)||e.repeat||e.isComposing||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
   if($('#workspace').style.display!=='flex'||$('#codeOverlay').style.display==='flex'||!$('#deleteConfirm').hidden)return;
   if(!sel||!sel.isConnected||!sel.matches(editableTags))return;
@@ -1405,8 +1450,8 @@ function switchMode(m){
   }
   mode=m;if(m==='color'&&bulkColorMode)renderBulkColors();$('#workspace').dataset.mode=m;$$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.mode===m));$$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+m));if(m==='div'){renderTree();updateClassOptions();updateTextCandidates()}if(compactQuery.matches)document.querySelector('.panel-scroll').scrollTop=0;}
 function restoreFromHistory(source){renderPreview(source);updateUndoUI();scheduleAutosave()}
-function undo(){finishInlineEdit(true);hideQuickMenu();commitPendingText(true);if(!past.length)return;const cur=serialize();future.push(cur);const state=past.pop();restoreFromHistory(state);toast('되돌렸어요')}
-function redo(){finishInlineEdit(true);hideQuickMenu();commitPendingText(true);if(!future.length)return;const cur=serialize();past.push(cur);const state=future.pop();restoreFromHistory(state);toast('다시 적용했어요')}
+function undo(){if(liveCodeMode)stopLiveCodeMode();finishInlineEdit(true);hideQuickMenu();commitPendingText(true);if(!past.length)return;const cur=serialize();future.push(cur);const state=past.pop();restoreFromHistory(state);toast('되돌렸어요')}
+function redo(){if(liveCodeMode)stopLiveCodeMode();finishInlineEdit(true);hideQuickMenu();commitPendingText(true);if(!future.length)return;const cur=serialize();past.push(cur);const state=future.pop();restoreFromHistory(state);toast('다시 적용했어요')}
 // HTML 편집기에서만 사용되는 안전 우선 코드 정리.
 // 텍스트·속성·CSS·JS·pre·textarea 내용은 바꾸지 않고, 블록 요소만 들여쓴다.
 const htmlFormatParents=new Set('html head body div section article main aside header footer nav ul ol dl table thead tbody tfoot tr li blockquote figure figcaption form fieldset details summary template'.split(' '));
@@ -1458,16 +1503,82 @@ function prettyHTML(source){
     return (doctype?doctype+'\n':'')+formatNode(d.documentElement,0);
   }catch(e){console.warn('HTML 정리 생략:',e);return source}
 }
+// v3.7.2: source editing and live preview, without taking over normal visual tools.
+// Store one history snapshot per code-editing session rather than one huge HTML copy per keystroke.
+function enterLiveCodeMode(){
+  if(liveCodeMode)return;
+  finishInlineEdit(true);hideQuickMenu();
+  if(commitPendingText(true))notifyMutation();
+  liveCodeBaseline=serialize();
+  liveCodeLastPreview=liveCodeBaseline;
+  liveCodeDirty=false;liveCodeUndoSaved=false;
+  $('#liveCodeValue').value=prettyHTML(liveCodeBaseline);
+  liveCodeMode=true;
+  $('#workspace').dataset.codeMode='true';
+  $('#liveCodePane').hidden=false;
+  $('#liveCodeToggle').setAttribute('aria-pressed','true');
+  $('#liveCodeStatus').textContent='코드를 입력하면 오른쪽에 자동 반영돼요.';
+  if(compactQuery.matches)compactPane='code';
+  updateCompactChoices();
+  $('#liveCodeValue').focus();
+}
+function flushLiveCode(){
+  clearTimeout(liveCodeTimer);
+  if(!liveCodeMode||!liveCodeDirty)return;
+  const source=$('#liveCodeValue').value;
+  if(source===liveCodeLastPreview)return;
+  if(!source.trim()){$('#liveCodeStatus').textContent='HTML이 비어 있어요 · 미리보기는 유지됩니다';return;}
+  if(!/<[a-z][\s\S]*?>/i.test(source)){$('#liveCodeStatus').textContent='HTML 태그를 입력하면 미리보기가 갱신됩니다';return;}
+  if(!liveCodeUndoSaved){saveHistorySnapshot(liveCodeBaseline);liveCodeUndoSaved=true}
+  liveCodeLastPreview=source;
+  $('#liveCodeStatus').textContent='미리보기에 반영하는 중…';
+  renderPreview(source,true);
+  $('#liveCodeStatus').textContent='✓ 미리보기 반영됨';
+  scheduleAutosave();
+}
+function queueLiveCodePreview(){
+  if(!liveCodeMode)return;
+  liveCodeDirty=true;
+  $('#liveCodeStatus').textContent='입력 중… 잠시 후 미리보기 갱신';
+  clearTimeout(liveCodeTimer);
+  liveCodeTimer=setTimeout(flushLiveCode,$('#liveCodeValue').value.length>100000?800:500);
+  scheduleAutosave();
+}
+function stopLiveCodeMode(){
+  if(!liveCodeMode)return;
+  flushLiveCode();clearTimeout(liveCodeTimer);
+  liveCodeMode=false;
+  $('#workspace').dataset.codeMode='false';
+  $('#liveCodePane').hidden=true;
+  $('#liveCodeToggle').setAttribute('aria-pressed','false');
+  if(compactQuery.matches&&compactPane==='code')compactPane='edit';
+  updateCompactChoices();
+  scheduleAutosave();
+}
+function toggleLiveCodeMode(){
+  if(liveCodeMode)stopLiveCodeMode();else enterLiveCodeMode();
+}
+function formatLiveCode(){
+  const box=$('#liveCodeValue'),old=box.value;
+  if(!old.trim())return toast('정리할 HTML을 먼저 입력해주세요.');
+  const value=prettyHTML(old);
+  if(old!==value){box.value=value;queueLiveCodePreview()}
+  box.focus();toast('코드 들여쓰기를 정리했어요.');
+}
+function currentOutputHtml(){
+  if(liveCodeMode){flushLiveCode();if(liveCodeDirty&&$('#liveCodeValue').value.trim())return $('#liveCodeValue').value}
+  return serialize();
+}
 function formatCurrentCode(){
   const box=$('#codeValue'),old=box.value;
   if(!old.trim())return toast('정리할 HTML을 입력해주세요.');
   box.value=prettyHTML(old);
   box.focus();toast('HTML 태그 줄바꿈과 들여쓰기를 정리했어요.');
 }
-function openCode(){finishInlineEdit(true);hideQuickMenu();commitPendingText(true);codeOpenValue=prettyHTML(serialize());$('#codeValue').value=codeOpenValue;$('#codeOverlay').style.display='flex';$('#codeValue').focus()}
+function openCode(){if(liveCodeMode)stopLiveCodeMode();finishInlineEdit(true);hideQuickMenu();commitPendingText(true);codeOpenValue=prettyHTML(serialize());$('#codeValue').value=codeOpenValue;$('#codeOverlay').style.display='flex';$('#codeValue').focus()}
 function closeCode(){if($('#codeValue').value!==codeOpenValue&&!confirm('수정한 코드를 적용하지 않고 닫을까요?'))return;$('#codeOverlay').style.display='none'}
 function applyCode(){const value=$('#codeValue').value;if(!value.trim())return toast('코드를 입력해주세요.');if(value===codeOpenValue){$('#codeOverlay').style.display='none';return toast('코드 변경 없이 닫았어요.')}history();renderPreview(value);$('#codeOverlay').style.display='none';toast('HTML 코드를 적용했어요')}
-function download(){finishInlineEdit(true);hideQuickMenu();commitPendingText(true);const html=serialize();if(!html)return;const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='color-studio-result.html';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);toast('HTML을 저장했어요')}
+function download(){if(liveCodeMode)flushLiveCode();finishInlineEdit(true);hideQuickMenu();commitPendingText(true);const html=currentOutputHtml();if(!html)return;const blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='color-studio-result.html';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);toast('HTML을 저장했어요')}
 async function writeHtmlClipboard(html,fallbackTextarea){
   if(!html)return toast('복사할 HTML이 없어요.');
   try{
@@ -1488,10 +1599,10 @@ async function copyCode(){return writeHtmlClipboard($('#codeValue').value,$('#co
 async function copyHtml(){
   finishInlineEdit(true);hideQuickMenu();
   if(commitPendingText(true))notifyMutation();
-  const html=serialize();return writeHtmlClipboard(html);
+  const html=currentOutputHtml();return writeHtmlClipboard(html);
 }
 $('#resumeDraft').onclick=()=>{const draft=savedDraft();if(!draft)return showRecovery();lastAutosave=draft.html;importHtml(draft.html);toast('이전 작업을 복구했어요.');};$('#discardDraft').onclick=()=>{if(!confirm('브라우저에 저장된 이전 작업을 삭제할까요?'))return;try{localStorage.removeItem(DRAFT_KEY)}catch{}lastAutosave='';showRecovery();toast('이전 임시 저장을 삭제했어요.');};$('#startBtn').onclick=()=>importHtml($('#startInput').value);$('#exampleBtn').onclick=()=>{$('#startInput').value=sample;importHtml(sample)};$('#fileBtn').onclick=()=>$('#htmlFile').click();$('#htmlFile').onchange=async e=>{const f=e.target.files[0];if(f){const text=await f.text();$('#startInput').value=text;importHtml(text)}e.target.value=''};
-$('#loadAnother').onclick=()=>{if(!confirm('현재 작업을 끝내고 다른 HTML을 불러올까요? 저장하지 않은 수정은 사라집니다.'))return;$('#workspace').style.display='none';$('#toolbar').hidden=true;$('#mobileToolsToggle').hidden=true;$('#compactNav').hidden=true;closeSmallTools();$('#start').style.display='flex';$('#startInput').value='';past=[];future=[];updateUndoUI()};
+$('#loadAnother').onclick=()=>{if(!confirm('현재 작업을 끝내고 다른 HTML을 불러올까요? 저장하지 않은 수정은 사라집니다.'))return;if(liveCodeMode)stopLiveCodeMode();$('#workspace').style.display='none';$('#toolbar').hidden=true;$('#mobileToolsToggle').hidden=true;$('#compactNav').hidden=true;closeSmallTools();$('#start').style.display='flex';$('#startInput').value='';past=[];future=[];updateUndoUI()};
 
 // v3.5: 색상 값 일괄 수정. CSS 선언값만 읽으며 선택자/글 본문/주석/URL은 건드리지 않는다.
 let bulkColorMode=false, bulkColorRows=[], bulkColorKey='';
@@ -1713,7 +1824,7 @@ $('#bulkNewHex').onchange=()=>{
 $('#applyBulkColor').onclick=()=>{const v=csValidHex($('#bulkNewHex').value);if(!v)return toast('올바른 HEX 색상 코드를 입력해주세요.');replaceSameColor(bulkColorKey,v,bulkAlphaExplicit)};
 
 
-$('#undo').onclick=undo;$('#redo').onclick=redo;$('#openCode').onclick=openCode;$('#closeCode').onclick=closeCode;$('#applyCode').onclick=applyCode;$('#formatCode').onclick=formatCurrentCode;$('#copyCode').onclick=copyCode;$('#copyHtml').onclick=copyHtml;$('#download').onclick=download;
+$('#undo').onclick=undo;$('#redo').onclick=redo;$('#liveCodeToggle').onclick=toggleLiveCodeMode;$('#liveExit').onclick=stopLiveCodeMode;$('#liveFormat').onclick=formatLiveCode;$('#liveCodeValue').addEventListener('input',queueLiveCodePreview);$('#liveCodeValue').addEventListener('keydown',e=>{if(e.key.toLowerCase()==='f'&&(e.ctrlKey||e.metaKey)&&e.shiftKey){e.preventDefault();formatLiveCode()}if(e.key==='Tab'){e.preventDefault();const t=e.target,a=t.selectionStart,b=t.selectionEnd;t.setRangeText('  ',a,b,'end');queueLiveCodePreview()}});$('#openCode').onclick=openCode;$('#closeCode').onclick=closeCode;$('#applyCode').onclick=applyCode;$('#formatCode').onclick=formatCurrentCode;$('#copyCode').onclick=copyCode;$('#copyHtml').onclick=copyHtml;$('#download').onclick=download;
 $('#targetClass').onchange=e=>{className=e.target.value;renderSelectedClasses();updateSelectionIdentity();updateControls();updateSplitClassOptions()};$('#makeClass').onclick=newClass;$('#splitSourceClass').onchange=updateSplitClassOptions;$('#splitClass').onclick=splitSelectedClass;$$('.tab').forEach(btn=>btn.onclick=()=>switchMode(btn.dataset.mode));
 $$('[data-colorprop]').forEach(input=>input.onchange=e=>{
  const p=e.target.dataset.colorprop,c=csHexRGBA(e.target.value),old=csComputedRGBA(p),v=csToHex({...c,a:old.a});setRuleProperty(p,v);updateColors();
@@ -1769,16 +1880,27 @@ $('#previewWidth').onclick=()=>{const narrow=frame.classList.toggle('narrow');$(
 // v3.7.1 : PC/모바일 공용 문서, 작은 화면에서는 편집과 미리보기를 전환합니다.
 const compactQuery=window.matchMedia('(max-width:1020px)');
 let compactPane='edit';
-function setCompactPane(pane,focusButton=false){
-  if(pane!=='edit'&&pane!=='preview')return;
-  if(pane==='preview'&&commitPendingText(true)){notifyMutation()}
-  compactPane=pane;
+function updateCompactChoices(){
+  const pane=liveCodeMode?'code':compactPane;
   $('#workspace').dataset.compactView=pane;
-  const editBtn=$('#compactEdit'), previewBtn=$('#compactPreview');
-  editBtn.classList.toggle('active',pane==='edit');previewBtn.classList.toggle('active',pane==='preview');
-  editBtn.setAttribute('aria-pressed',String(pane==='edit'));
-  previewBtn.setAttribute('aria-pressed',String(pane==='preview'));
-  if(focusButton)(pane==='edit'?editBtn:previewBtn).focus();
+  for(const [key,id] of [['edit','compactEdit'],['preview','compactPreview'],['code','compactCode']]){
+    const button=$('#'+id),active=pane===key;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+  }
+}
+function setCompactPane(pane,focusButton=false){
+  if(!['edit','preview','code'].includes(pane))return;
+  if(pane==='code'){
+    enterLiveCodeMode();
+    compactPane='code';
+  }else{
+    if(liveCodeMode)stopLiveCodeMode();
+    if(pane==='preview'&&commitPendingText(true))notifyMutation();
+    compactPane=pane;
+  }
+  updateCompactChoices();
+  if(focusButton)$('#'+({edit:'compactEdit',preview:'compactPreview',code:'compactCode'}[pane])).focus();
   hideQuickMenu();
 }
 function closeSmallTools(){
@@ -1791,11 +1913,12 @@ function refreshCompactLayout(){
     $('#left').style.removeProperty('flex');
     $('#workspace').dataset.compactView='edit';
   }else{
-    $('#workspace').dataset.compactView=compactPane;
+    $('#workspace').dataset.compactView=liveCodeMode?'code':compactPane;
   }
 }
 $('#compactEdit').onclick=()=>setCompactPane('edit');
 $('#compactPreview').onclick=()=>setCompactPane('preview');
+$('#compactCode').onclick=()=>setCompactPane('code');
 $('#compactSave').onclick=()=>$('#download').click();
 $('#previewToEdit').onclick=()=>setCompactPane('edit');
 $('#mobileToolsToggle').onclick=()=>{
